@@ -17,9 +17,8 @@ public class Agent
 
 public class Manager : MonoBehaviour
 {
-
     public Camera mainCam;              //main camera
-    private float camYPos;
+    private float camYPos=50;
     public Transform inputFieldTrns;
 
     public GameObject[] peopleObj;
@@ -41,6 +40,9 @@ public class Manager : MonoBehaviour
     public Slider slider;
     public Text frameNumTxt;
 
+    float updateDelayTimer = 0;
+    public float delayTime=1.0f;
+
     private bool first = true;
 
     // Start is called before the first frame update
@@ -56,6 +58,7 @@ public class Manager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         string inputFieldTxt = inputFieldTrns.GetComponent<InputField>().text;
         float floatInput;
         float.TryParse(inputFieldTxt, out floatInput);
@@ -84,14 +87,25 @@ public class Manager : MonoBehaviour
             {
                 if(frameNum<agents[0].posXData.Length)
                 {
-                    for(int i=0;i<agentObjs.Length;i++)
+                    if (updateDelayTimer > delayTime)
                     {
-                        agentObjs[i].transform.position = new Vector3(agents[i].posXData[frameNum],0, agents[i].posXData[frameNum]);
+                        updateDelayTimer = 0.0f;
+                        for (int i = 0; i < agentObjs.Length; i++)
+                        {
+                            Vector3 d = agentObjs[i].transform.position - new Vector3(agents[i].posXData[frameNum], 0, agents[i].posYData[frameNum]);
+                            d.Normalize();
+                            float dir = Mathf.Atan2(d.z, d.x) * (180.0f / 3.1415f);
+                            agentObjs[i].transform.localRotation = Quaternion.Euler(new Vector3(0, -dir-90, 0));
+                            agentObjs[i].transform.position = new Vector3(agents[i].posXData[frameNum], 0, agents[i].posYData[frameNum]);
+                           
+                        }
+                        slider.value = frameNum;
+                        frameNum++;
                     }
                     if (isStart)
                     {
-                        slider.value = frameNum;
-                        frameNum++;
+                        updateDelayTimer += Time.deltaTime;
+                        
                     }
                 }
                
