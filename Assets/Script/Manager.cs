@@ -45,6 +45,8 @@ public class Manager : MonoBehaviour
 
     private bool first = true;
 
+    float moveCamSpeed =30.0f;
+
     // Start is called before the first frame update
     void Awake()
     {
@@ -58,7 +60,7 @@ public class Manager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        moveCamPos();
         string inputFieldTxt = inputFieldTrns.GetComponent<InputField>().text;
         float floatInput;
         float.TryParse(inputFieldTxt, out floatInput);
@@ -114,6 +116,33 @@ public class Manager : MonoBehaviour
 
     }
 
+    private void moveCamPos()
+    {
+        if (Input.GetKey(KeyCode.W))
+        {
+            mainCam.transform.position += new Vector3(0,0,1)*Time.deltaTime*moveCamSpeed;
+        }
+        if (Input.GetKey(KeyCode.S))
+        {
+            mainCam.transform.position += new Vector3(0, 0, -1) * Time.deltaTime * moveCamSpeed;
+        }
+        if (Input.GetKey(KeyCode.A))
+        {
+            mainCam.transform.position += new Vector3(-1, 0, 0) * Time.deltaTime * moveCamSpeed;
+        }
+        if (Input.GetKey(KeyCode.D))
+        {
+            mainCam.transform.position += new Vector3(1, 0, 0) * Time.deltaTime * moveCamSpeed;
+        }
+        if (Input.GetKey(KeyCode.E))
+        {
+            mainCam.transform.position += new Vector3(0, 1, 0) * Time.deltaTime * moveCamSpeed;
+        }
+        if (Input.GetKey(KeyCode.Q))
+        {
+            mainCam.transform.position += new Vector3(0, -1, 0) * Time.deltaTime * moveCamSpeed;
+        }
+    }
 
     public void FileLoad()
     {
