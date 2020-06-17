@@ -14,6 +14,15 @@ public class Agent
     }
 
 }
+[System.Serializable]
+public class Obstacle
+{
+    public Vector3 position;
+    public float width, height;
+
+    public Obstacle() { }
+}
+
 
 public class Manager : MonoBehaviour
 {
@@ -22,15 +31,23 @@ public class Manager : MonoBehaviour
     public Transform inputFieldTrns;
 
     public GameObject[] peopleObj;
+    public GameObject buildingObj;
+    
 
     //private string[] dataPath;
 
     public InputField dataXPath;
     public InputField dataYPath;
+    public InputField dataSettingPath;
+    public InputField dataObstaclePath;
 
-    private int agentNum=2;
+    private int agentNum=0;
+    private int obstacleNum = 0;
     public Agent[] agents;
     GameObject[] agentObjs;
+
+    public Obstacle[] obstacles;
+    GameObject[] obstacleObjs;
 
     private bool isLoad=false;
     public bool isStart = false;
@@ -51,10 +68,8 @@ public class Manager : MonoBehaviour
     void Awake()
     {
         camYPos = mainCam.transform.position.y;
-        //초기화
-        agents = new Agent[agentNum];
-        for (int i = 0; i < agents.Length; i++)
-            agents[i] = new Agent();
+
+       
     }
 
     // Update is called once per frame
@@ -70,19 +85,33 @@ public class Manager : MonoBehaviour
             mainCam.transform.position = new Vector3(mainCam.transform.position.x,camYPos, mainCam.transform.position.z);
         }
         
-        //로드가 끝났을 때
+        //Load finished
         if(isLoad)
         {
             frameNumTxt.text = frameNum.ToString();
            
             if (first)
             {
-                agentObjs = new GameObject[agents.Length];
-                //처음일 때  객체 생성
-                for(int i=0;i<agents.Length;i++)
+                agentObjs = new GameObject[agentNum];
+                obstacleObjs = new GameObject[obstacleNum];
+                //Create Object
+                for (int i=0;i<agents.Length;i++)
                 {
                     agentObjs[i] = Instantiate(peopleObj[i], new Vector3(agents[i].posXData[0], 0, agents[i].posYData[0]), Quaternion.identity);
                 }
+                //Create Obstalce
+                if(obstacleNum>0)
+                {
+                    for(int i=0;i<obstacleNum;i++)
+                    {
+                        obstacleObjs[i] = Instantiate(buildingObj, obstacles[i].position, Quaternion.identity);
+                        //scale to real width,height
+                        float currentSizeX = obstacleObjs[i].GetComponent<Collider>().bounds.size.x;
+                        float currentSizeZ = obstacleObjs[i].GetComponent<Collider>().bounds.size.z;
+                        obstacleObjs[i].transform.localScale = new Vector3(obstacles[i].width* obstacleObjs[i].transform.localScale.x/ currentSizeX, 1, obstacles[i].height * obstacleObjs[i].transform.localScale.z / currentSizeZ);
+                    }
+                }
+
                 first = false;
             }
             else
@@ -146,8 +175,57 @@ public class Manager : MonoBehaviour
 
     public void FileLoad()
     {
-        if(dataXPath!=null&&dataYPath!=null)
+        if(dataXPath!=null&&dataYPath!=null&&dataSettingPath!=null)
         {
+            string[] settingValue= System.IO.File.ReadAllLines(dataSettingPath.text);
+            //if settingValue available
+            if (settingValue.Length > 0)
+            {
+                int.TryParse(settingValue[0], out agentNum);
+                int.TryParse(settingValue[1], out obstacleNum);
+                
+                if (obstacleNum>0)
+                {
+                    obstacles = new Obstacle[obstacleNum];
+                    for (int i = 0; i < obstacles.Length; i++)
+                        obstacles[i] = new Obstacle();
+                    if (dataObstaclePath!=null)
+                    {
+                        string[] obatacleValue = System.IO.File.ReadAllLines(dataObstaclePath.text);
+                        float[] verticesX = new float[4];
+                        float[] verticesY = new float[4];
+                        for (int i = 0; i < obstacleNum; i++)
+                        {
+                            //save vertices of each Obstacle
+                            for(int j=0;j<4;j++)
+                            {
+                                for (int z = 0; z < 2; z++)
+                                {
+                                    if(z%2==0)
+                                        float.TryParse(obatacleValue[i * 8 + j*2+z], out verticesX[j]);
+                                    else
+                                        float.TryParse(obatacleValue[i * 8 + j*2+z], out verticesY[j]);
+                                }
+                            }
+                            float width = verticesX[2] - verticesX[0];
+                            float height= verticesY[2] - verticesY[0];
+                            Debug.Log("("+verticesX[0]+","+ verticesY[0]+") "+
+                                "(" + verticesX[1] + "," + verticesY[1] + ") "+
+                                "(" + verticesX[2] + "," + verticesY[2] + ") "+
+                                "(" + verticesX[3] + "," + verticesY[3] + ") ");
+                            obstacles[i].position = new Vector3(verticesX[0]+(width / 2),0, verticesY[0] + (height / 2));
+                            obstacles[i].width = width;
+                            obstacles[i].height = height;
+                        }
+                    }
+                }
+            }
+
+            agents = new Agent[agentNum];
+            for (int i = 0; i < agents.Length; i++)
+            {
+                agents[i] = new Agent();
+            }
             //X,Y Pos Data
             string[] textXValue = System.IO.File.ReadAllLines(dataXPath.text);
             string[] textYValue = System.IO.File.ReadAllLines(dataYPath.text);
@@ -162,7 +240,7 @@ public class Manager : MonoBehaviour
 
             if (textXValue.Length > 0)
             {
-                for (int i = 0; i < textXValue.Length; i++)
+                for (int i = 0; i < maxFrame; i++)
                 {
                     //Debug.Log(textValue[i]);
                     float.TryParse(textXValue[i], out agents[i% agentNum].posXData[i/ agentNum]);
