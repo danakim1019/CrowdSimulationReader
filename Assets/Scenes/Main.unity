@@ -3784,9 +3784,9 @@ MonoBehaviour:
   mainCam: {fileID: 963194227}
   inputFieldTrns: {fileID: 2086909282}
   peopleObj:
-  - {fileID: 6052364754022833694, guid: 183566eeef3aa3b4692c2bf14cf627e4, type: 3}
-  - {fileID: 4317506393495230951, guid: 17ce61b063decd044b8b8bc375ef2df6, type: 3}
-  buildingObj: {fileID: 1475152804140566, guid: e1cbe4c9f91d8514fa3cd53c81d507c8,
+  - {fileID: 6332594131682040067, guid: a279630971005914699dc672b8a70600, type: 3}
+  - {fileID: 4191390122782958815, guid: 1ffabcc2d7b51b34699e7fa3205172aa, type: 3}
+  buildingObj: {fileID: 199262366103587489, guid: 9cb7dbf23e733fa4787990c53c367859,
     type: 3}
   dataXPath: {fileID: 798097966}
   dataYPath: {fileID: 3991198}
