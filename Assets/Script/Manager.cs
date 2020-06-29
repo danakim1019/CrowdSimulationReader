@@ -40,11 +40,13 @@ public class Manager : MonoBehaviour
     public InputField dataYPath;
     public InputField dataSettingPath;
     public InputField dataObstaclePath;
+    public InputField animatorParam;
 
     private int agentNum=0;
     private int obstacleNum = 0;
     public Agent[] agents;
     GameObject[] agentObjs;
+    Animator[] agentAnim;
 
     public Obstacle[] obstacles;
     GameObject[] obstacleObjs;
@@ -64,12 +66,13 @@ public class Manager : MonoBehaviour
 
     float moveCamSpeed =30.0f;
 
+    public float runVelocity = 0.1f;
+
     // Start is called before the first frame update
     void Awake()
     {
         camYPos = mainCam.transform.position.y;
 
-       
     }
 
     // Update is called once per frame
@@ -112,10 +115,25 @@ public class Manager : MonoBehaviour
                     }
                 }
 
+                //Animator Check
+                //if Animator exist(Only 2 Agents, you have more agnets more parameter check)
+                if(peopleObj[0].GetComponent<Animator>()!=null
+                    && peopleObj[1].GetComponent<Animator>() != null)
+                {
+                    agentAnim = new Animator[agentNum];
+                    for (int i = 0; i < agentNum; i++)
+                    {
+                        agentAnim[i] = agentObjs[i].GetComponent<Animator>();
+                       
+                    }
+                }
+                
+
                 first = false;
             }
             else
             {
+
                 if(frameNum<agents[0].posXData.Length)
                 {
                     if (updateDelayTimer > delayTime)
@@ -124,11 +142,26 @@ public class Manager : MonoBehaviour
                         for (int i = 0; i < agentObjs.Length; i++)
                         {
                             Vector3 d = agentObjs[i].transform.position - new Vector3(agents[i].posXData[frameNum], 0, agents[i].posYData[frameNum]);
+                            float vecLength = Vector3.Magnitude(d);
+                            Debug.Log(vecLength +": "+ animatorParam.text);
                             d.Normalize();
                             float dir = Mathf.Atan2(d.z, d.x) * (180.0f / 3.1415f);
                             agentObjs[i].transform.localRotation = Quaternion.Euler(new Vector3(0, -dir-90, 0));
                             agentObjs[i].transform.position = new Vector3(agents[i].posXData[frameNum], 0, agents[i].posYData[frameNum]);
-                           
+                            if (agentAnim.Length > 0)
+                            {
+                                if (vecLength > runVelocity && !agentAnim[i].GetBool(animatorParam.text))
+                                {
+                                    Debug.Log(i + ": if");
+                                    //agentAnim[i].SetBool(animatorParam.text, true);
+                                    agentAnim[i].SetBool(animatorParam.text, true);
+                                }
+                                else if (vecLength < runVelocity&&agentAnim[i].GetBool(animatorParam.text))
+                                {
+                                    agentAnim[i].SetBool(animatorParam.text, false);
+                                }
+                            }
+                            
                         }
                         slider.value = frameNum;
                         frameNum++;
@@ -136,7 +169,6 @@ public class Manager : MonoBehaviour
                     if (isStart)
                     {
                         updateDelayTimer += Time.deltaTime;
-                        
                     }
                 }
                
@@ -207,6 +239,7 @@ public class Manager : MonoBehaviour
                                         float.TryParse(obatacleValue[i * 8 + j*2+z], out verticesY[j]);
                                 }
                             }
+
                             float width = verticesX[2] - verticesX[0];
                             float height= verticesY[2] - verticesY[0];
                             Debug.Log("("+verticesX[0]+","+ verticesY[0]+") "+
@@ -240,7 +273,7 @@ public class Manager : MonoBehaviour
 
             if (textXValue.Length > 0)
             {
-                for (int i = 0; i < maxFrame; i++)
+                for (int i = 0; i < maxFrame*agentNum; i++)
                 {
                     //Debug.Log(textValue[i]);
                     float.TryParse(textXValue[i], out agents[i% agentNum].posXData[i/ agentNum]);
